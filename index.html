@@ -156,19 +156,6 @@
       errorDiv.textContent = "";
       resultDiv.innerHTML = "";
 
-      const now = new Date();
-      const hour = now.getHours();
-      const isMorning = hour < 12;
-
-      if (selected.includes('tangluc') && isMorning) {
-        errorDiv.textContent = "⚠️ Tăng lực chỉ được bổ sung vào buổi chiều!";
-        return;
-      }
-      if (selected.includes('phongduongruot') && isMorning) {
-        errorDiv.textContent = "⚠️ Phòng đường ruột chỉ được bổ sung vào buổi chiều!";
-        return;
-      }
-
       let camTong = 0, tankTong = 0;
       camInputs.forEach(input => {
         camTong += parseFloat(input.value) || 0;
@@ -180,7 +167,7 @@
       const camKg = camTong / 1000;
       const rows = [];
 
-      rows.push(["Tổng khối lượng cám", `${camTong.toFixed(2)} g`]);
+      rows.push(["Tổng khối lượng cám", `${camTong.toFixed(2)} g`] );
 
       if (selected.includes('tangluc')) {
         const value = 10 * camKg * 1000;
