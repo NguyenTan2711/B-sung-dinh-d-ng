@@ -1,3 +1,4 @@
+<!-- Updated HTML and JS with cleaned labels and conditions -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -101,13 +102,14 @@
   <label>Chọn thành phần bổ sung:</label>
   <div class="checkbox-group">
     <label><input type="checkbox" value="tangluc" class="supplement"> Tăng lực (10g/1kg cám, 2 lần/ngày chiều)</label>
-    <label><input type="checkbox" value="phongduongruot" class="supplement"> Phòng đường ruột (5g/1kg cám, 1 lần/ngày chiều)</label>
+    <label><input type="checkbox" value="phongduongruot" class="supplement"> Phòng đường ruột (5g/1kg cám, 1 lần/ngày sáng)</label>
     <label><input type="checkbox" value="visinh" class="supplement"> Vi sinh đường ruột (30ml/1kg cám/mỗi lần, pha loãng 3 lần)</label>
     <label><input type="checkbox" value="bogan" class="supplement"> Bổ gan (8ml/1kg cám/buổi sáng, pha loãng 3 lần)</label>
     <label><input type="checkbox" value="visinhnuoc" class="supplement"> Vi sinh đánh nước (1g/1000L, 3 ngày 1 lần)</label>
   </div>
 
   <button onclick="calculate()">Tính toán</button>
+  <button onclick="downloadResult()">📥 Tải kết quả</button>
 
   <div id="error" class="error"></div>
   <div id="result"></div>
@@ -118,7 +120,6 @@
     function addTank() {
       tankCount++;
       const container = document.getElementById('tanks-container');
-
       const div = document.createElement('div');
       div.className = 'tank-group';
       div.innerHTML = `
@@ -146,6 +147,10 @@
       return `${value.toFixed(2)} µL`;
     }
 
+    function cleanLabel(label) {
+      return label.replace(/\s*\(.*?\)/g, "").trim();
+    }
+
     function calculate() {
       const camInputs = document.querySelectorAll('.cam');
       const tankInputs = document.querySelectorAll('.tank');
@@ -155,53 +160,113 @@
 
       errorDiv.textContent = "";
       resultDiv.innerHTML = "";
+      let outputText = "";
 
-      let camTong = 0, tankTong = 0;
-      camInputs.forEach(input => {
-        camTong += parseFloat(input.value) || 0;
+      let totalSummary = {
+        cam: 0,
+        tank: 0,
+        tangluc: 0,
+        phongduongruot: 0,
+        visinh: 0,
+        visinhWater: 0,
+        bogan: 0,
+        boganWater: 0,
+        visinhnuoc: 0,
+        nuoc: 0
+      };
+
+      camInputs.forEach((camInput, i) => {
+        const camValue = parseFloat(camInput.value) || 0;
+        const tankValue = parseFloat(tankInputs[i].value) || 0;
+        const camKg = camValue / 1000;
+        let waterDeduct = 0;
+
+        const rows = [];
+        rows.push(["Khối lượng cám", `${camValue.toFixed(2)} g`]);
+        totalSummary.cam += camValue;
+        totalSummary.tank += tankValue;
+
+        if (selected.includes("tangluc")) {
+          const value = 10 * camKg * 1000;
+          rows.push(["Tăng lực", formatMg(value)]);
+          totalSummary.tangluc += value;
+        }
+        if (selected.includes("phongduongruot")) {
+          const value = 5 * camKg * 1000;
+          rows.push(["Phòng đường ruột", formatMg(value)]);
+          totalSummary.phongduongruot += value;
+        }
+        if (selected.includes("visinh")) {
+          const value = 30 * camKg * 1000 * 3;
+          rows.push(["Vi sinh đường ruột", formatUl(value)]);
+          waterDeduct += 30 * camKg * 1000 * 2;
+          totalSummary.visinh += value;
+          totalSummary.visinhWater += waterDeduct;
+        }
+        if (selected.includes("bogan")) {
+          const value = 8 * camKg * 1000 * 3;
+          rows.push(["Bổ gan", formatUl(value)]);
+          waterDeduct += 8 * camKg * 1000 * 2;
+          totalSummary.bogan += value;
+          totalSummary.boganWater += 8 * camKg * 1000 * 2;
+        }
+        if (selected.includes("visinhnuoc")) {
+          const value = tankValue;
+          rows.push(["Vi sinh đánh nước", formatMg(value)]);
+          totalSummary.visinhnuoc += value;
+        }
+
+        const nuocUl = (camValue * 1000) / 20 - waterDeduct;
+        if (nuocUl > 0) {
+          rows.push(["Bổ sung nước đã trừ phần pha loãng", formatUl(nuocUl)]);
+          totalSummary.nuoc += nuocUl;
+        }
+
+        let html = `<h3>Kết quả cho bể ${i + 1}</h3><table><tr><th>Thành phần</th><th>Lượng</th></tr>`;
+        rows.forEach(row => {
+          html += `<tr><td>${cleanLabel(row[0])}</td><td>${row[1]}</td></tr>`;
+          outputText += `Bể ${i + 1} - ${cleanLabel(row[0])}: ${row[1]}\n`;
+        });
+        html += `</table>`;
+        resultDiv.innerHTML += html;
+        outputText += `\n`;
       });
-      tankInputs.forEach(input => {
-        tankTong += parseFloat(input.value) || 0;
-      });
 
-      const camKg = camTong / 1000;
-      const rows = [];
-      rows.push(["Tổng khối lượng cám", `${camTong.toFixed(2)} g`]);
+      if (tankCount > 1) {
+        let html = `<h2>Tổng cộng tất cả bể</h2><table><tr><th>Thành phần</th><th>Tổng</th></tr>`;
+        if (selected.includes("tangluc")) html += `<tr><td>Tăng lực</td><td>${formatMg(totalSummary.tangluc)}</td></tr>`;
+        if (selected.includes("phongduongruot")) html += `<tr><td>Phòng đường ruột</td><td>${formatMg(totalSummary.phongduongruot)}</td></tr>`;
+        if (selected.includes("visinh")) html += `<tr><td>Vi sinh đường ruột</td><td>${formatUl(totalSummary.visinh)}</td></tr>`;
+        if (selected.includes("bogan")) html += `<tr><td>Bổ gan</td><td>${formatUl(totalSummary.bogan)}</td></tr>`;
+        if (selected.includes("visinhnuoc")) html += `<tr><td>Vi sinh đánh nước</td><td>${formatMg(totalSummary.visinhnuoc)}</td></tr>`;
+        if (totalSummary.nuoc > 0) html += `<tr><td>Bổ sung nước đã trừ phần pha loãng</td><td>${formatUl(totalSummary.nuoc)}</td></tr>`;
+        html += `</table>`;
+        resultDiv.innerHTML += html;
 
-      if (selected.includes('tangluc')) {
-        const value = 10 * camKg * 1000;
-        rows.push(["Tăng lực", formatMg(value)]);
-      }
-      if (selected.includes('phongduongruot')) {
-        const value = 5 * camKg * 1000;
-        rows.push(["Phòng đường ruột", formatMg(value)]);
-      }
-      let waterDeduct = 0;
-      if (selected.includes('visinh')) {
-        const value = 30 * camKg * 1000 * 3;
-        rows.push(["Vi sinh đường ruột (pha loãng 3 lần)", formatUl(value)]);
-        waterDeduct += 30 * camKg * 1000 * 2;
-      }
-      if (selected.includes('bogan')) {
-        const value = 8 * camKg * 1000 * 3;
-        rows.push(["Bổ gan (pha loãng 3 lần)", formatUl(value)]);
-        waterDeduct += 8 * camKg * 1000 * 2;
-      }
-      if (selected.includes('visinhnuoc')) {
-        const value = tankTong;
-        rows.push(["Vi sinh đánh nước", formatMg(value)]);
+        outputText += `Tổng cộng:\n`;
+        outputText += `Tổng khối lượng cám: ${totalSummary.cam.toFixed(2)} g\n`;
+        if (selected.includes("tangluc")) outputText += `Tăng lực: ${formatMg(totalSummary.tangluc)}\n`;
+        if (selected.includes("phongduongruot")) outputText += `Phòng đường ruột: ${formatMg(totalSummary.phongduongruot)}\n`;
+        if (selected.includes("visinh")) outputText += `Vi sinh đường ruột: ${formatUl(totalSummary.visinh)}\n`;
+        if (selected.includes("bogan")) outputText += `Bổ gan: ${formatUl(totalSummary.bogan)}\n`;
+        if (selected.includes("visinhnuoc")) outputText += `Vi sinh đánh nước: ${formatMg(totalSummary.visinhnuoc)}\n`;
+        if (totalSummary.nuoc > 0) outputText += `Bổ sung nước đã trừ phần pha loãng: ${formatUl(totalSummary.nuoc)}\n`;
       }
 
-      const nuocUl = (camTong * 1000) / 20 - waterDeduct;
-      rows.push(["Bổ sung nước (1L/20kg cám) đã trừ phần pha loãng", formatUl(Math.max(nuocUl, 0))]);
+      window.generatedResultText = outputText;
+    }
 
-      let html = `<table><tr><th>Thành phần</th><th>Lượng cần bổ sung</th></tr>`;
-      rows.forEach(row => {
-        html += `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
-      });
-      html += `</table>`;
+    function downloadResult() {
+      if (!window.generatedResultText) {
+        alert("Vui lòng tính toán trước khi tải kết quả.");
+        return;
+      }
 
-      resultDiv.innerHTML = html;
+      const blob = new Blob([window.generatedResultText], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "ket_qua_bo_sung_dinh_duong.txt";
+      link.click();
     }
   </script>
 </body>
