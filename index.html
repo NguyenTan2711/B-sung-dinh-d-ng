@@ -1,4 +1,3 @@
-<!-- Updated HTML and JS with cleaned labels and conditions -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -73,6 +72,11 @@
       border-radius: 5px;
       background-color: #fff;
     }
+    .note {
+      margin-top: 20px;
+      font-style: italic;
+      color: #7f8c8d;
+    }
   </style>
 </head>
 <body>
@@ -82,15 +86,12 @@
     <div class="tank-group">
       <label>Khối lượng cám cho bể 1 (g):</label>
       <input type="number" class="cam" required>
-
       <label>Thể tích bể 1 (lít):</label>
       <input type="number" class="tank" required>
     </div>
-
     <div class="tank-group">
       <label>Khối lượng cám cho bể 2 (g):</label>
       <input type="number" class="cam" required>
-
       <label>Thể tích bể 2 (lít):</label>
       <input type="number" class="tank" required>
     </div>
@@ -104,6 +105,7 @@
     <label><input type="checkbox" value="tangluc" class="supplement"> Tăng lực (10g/1kg cám, 2 lần/ngày chiều)</label>
     <label><input type="checkbox" value="phongduongruot" class="supplement"> Phòng đường ruột (5g/1kg cám, 1 lần/ngày sáng)</label>
     <label><input type="checkbox" value="visinh" class="supplement"> Vi sinh đường ruột (30ml/1kg cám/mỗi lần, pha loãng 3 lần)</label>
+    <label><input type="checkbox" value="tieuhoa" class="supplement"> Tiêu hóa TS (15ml/10kg cám/mỗi lần, pha loãng 10 lần)</label>
     <label><input type="checkbox" value="bogan" class="supplement"> Bổ gan (8ml/1kg cám/buổi sáng, pha loãng 3 lần)</label>
     <label><input type="checkbox" value="visinhnuoc" class="supplement"> Vi sinh đánh nước (1g/1000L, 3 ngày 1 lần)</label>
   </div>
@@ -113,6 +115,7 @@
 
   <div id="error" class="error"></div>
   <div id="result"></div>
+  <div class="note">* Đơn vị: mg = milligram, µL = microlit</div>
 
   <script>
     let tankCount = 2;
@@ -169,6 +172,8 @@
         phongduongruot: 0,
         visinh: 0,
         visinhWater: 0,
+        tieuhoa: 0,
+        tieuhoaWater: 0,
         bogan: 0,
         boganWater: 0,
         visinhnuoc: 0,
@@ -201,7 +206,14 @@
           rows.push(["Vi sinh đường ruột", formatUl(value)]);
           waterDeduct += 30 * camKg * 1000 * 2;
           totalSummary.visinh += value;
-          totalSummary.visinhWater += waterDeduct;
+          totalSummary.visinhWater += 30 * camKg * 1000 * 2;
+        }
+        if (selected.includes("tieuhoa")) {
+          const value = 15 * camKg * 1000 / 10 * 10;
+          rows.push(["Tiêu hóa TS", formatUl(value)]);
+          waterDeduct += value * (9/10);
+          totalSummary.tieuhoa += value;
+          totalSummary.tieuhoaWater += value * (9/10);
         }
         if (selected.includes("bogan")) {
           const value = 8 * camKg * 1000 * 3;
@@ -237,6 +249,7 @@
         if (selected.includes("tangluc")) html += `<tr><td>Tăng lực</td><td>${formatMg(totalSummary.tangluc)}</td></tr>`;
         if (selected.includes("phongduongruot")) html += `<tr><td>Phòng đường ruột</td><td>${formatMg(totalSummary.phongduongruot)}</td></tr>`;
         if (selected.includes("visinh")) html += `<tr><td>Vi sinh đường ruột</td><td>${formatUl(totalSummary.visinh)}</td></tr>`;
+        if (selected.includes("tieuhoa")) html += `<tr><td>Tiêu hóa TS</td><td>${formatUl(totalSummary.tieuhoa)}</td></tr>`;
         if (selected.includes("bogan")) html += `<tr><td>Bổ gan</td><td>${formatUl(totalSummary.bogan)}</td></tr>`;
         if (selected.includes("visinhnuoc")) html += `<tr><td>Vi sinh đánh nước</td><td>${formatMg(totalSummary.visinhnuoc)}</td></tr>`;
         if (totalSummary.nuoc > 0) html += `<tr><td>Bổ sung nước đã trừ phần pha loãng</td><td>${formatUl(totalSummary.nuoc)}</td></tr>`;
@@ -248,6 +261,7 @@
         if (selected.includes("tangluc")) outputText += `Tăng lực: ${formatMg(totalSummary.tangluc)}\n`;
         if (selected.includes("phongduongruot")) outputText += `Phòng đường ruột: ${formatMg(totalSummary.phongduongruot)}\n`;
         if (selected.includes("visinh")) outputText += `Vi sinh đường ruột: ${formatUl(totalSummary.visinh)}\n`;
+        if (selected.includes("tieuhoa")) outputText += `Tiêu hóa TS: ${formatUl(totalSummary.tieuhoa)}\n`;
         if (selected.includes("bogan")) outputText += `Bổ gan: ${formatUl(totalSummary.bogan)}\n`;
         if (selected.includes("visinhnuoc")) outputText += `Vi sinh đánh nước: ${formatMg(totalSummary.visinhnuoc)}\n`;
         if (totalSummary.nuoc > 0) outputText += `Bổ sung nước đã trừ phần pha loãng: ${formatUl(totalSummary.nuoc)}\n`;
@@ -261,7 +275,6 @@
         alert("Vui lòng tính toán trước khi tải kết quả.");
         return;
       }
-
       const blob = new Blob([window.generatedResultText], { type: "text/plain;charset=utf-8" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
