@@ -104,9 +104,9 @@
   <div class="checkbox-group">
     <label><input type="checkbox" value="tangluc" class="supplement"> Tăng lực (10g/1kg cám, 2 lần/ngày chiều)</label>
     <label><input type="checkbox" value="phongduongruot" class="supplement"> Phòng đường ruột (5g/1kg cám, 1 lần/ngày sáng)</label>
-    <label><input type="checkbox" value="visinh" class="supplement"> Vi sinh đường ruột (30ml/1kg cám/mỗi lần, pha loãng 3 lần)</label>
+    <label><input type="checkbox" value="visinh" class="supplement"> Vi sinh đường ruột (30ml/1kg cám/mỗi lần)</label>
     <label><input type="checkbox" value="tieuhoa" class="supplement"> Tiêu hóa TS (15ml/10kg cám/mỗi lần, pha loãng 10 lần)</label>
-    <label><input type="checkbox" value="bogan" class="supplement"> Bổ gan (8ml/1kg cám/buổi sáng, pha loãng 3 lần)</label>
+    <label><input type="checkbox" value="bogan" class="supplement"> Bổ gan (8ml/1kg cám/buổi sáng)</label>
     <label><input type="checkbox" value="visinhnuoc" class="supplement"> Vi sinh đánh nước (1g/1000L, 3 ngày 1 lần)</label>
   </div>
 
@@ -202,23 +202,20 @@
           totalSummary.phongduongruot += value;
         }
         if (selected.includes("visinh")) {
-          const value = 30 * camKg * 1000 * 3;
+          const value = 30 * camKg * 1000;
           rows.push(["Vi sinh đường ruột", formatUl(value)]);
-          waterDeduct += 30 * camKg * 1000 * 2;
           totalSummary.visinh += value;
           totalSummary.visinhWater += 30 * camKg * 1000 * 2;
         }
         if (selected.includes("tieuhoa")) {
           const value = 15 * camKg * 1000 / 10 * 10;
           rows.push(["Tiêu hóa TS", formatUl(value)]);
-          waterDeduct += value * (9/10);
           totalSummary.tieuhoa += value;
           totalSummary.tieuhoaWater += value * (9/10);
         }
         if (selected.includes("bogan")) {
-          const value = 8 * camKg * 1000 * 3;
+          const value = 8 * camKg * 1000;
           rows.push(["Bổ gan", formatUl(value)]);
-          waterDeduct += 8 * camKg * 1000 * 2;
           totalSummary.bogan += value;
           totalSummary.boganWater += 8 * camKg * 1000 * 2;
         }
@@ -228,11 +225,7 @@
           totalSummary.visinhnuoc += value;
         }
 
-        const nuocUl = (camValue * 1000) / 20 - waterDeduct;
-        if (nuocUl > 0) {
-          rows.push(["Bổ sung nước đã trừ phần pha loãng", formatUl(nuocUl)]);
-          totalSummary.nuoc += nuocUl;
-        }
+   
 
         let html = `<h3>Kết quả cho bể ${i + 1}</h3><table><tr><th>Thành phần</th><th>Lượng</th></tr>`;
         rows.forEach(row => {
