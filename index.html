@@ -105,7 +105,7 @@
     <label><input type="checkbox" value="tangluc" class="supplement"> Tăng lực (10g/1kg cám, 2 lần/ngày chiều)</label>
     <label><input type="checkbox" value="phongduongruot" class="supplement"> Phòng đường ruột (5g/1kg cám, 1 lần/ngày sáng)</label>
     <label><input type="checkbox" value="visinh" class="supplement"> Vi sinh đường ruột (30ml/1kg cám/mỗi lần)</label>
-    <label><input type="checkbox" value="tieuhoa" class="supplement"> Tiêu hóa TS (15ml/10kg cám/mỗi lần, pha loãng 10 lần)</label>
+    <label><input type="checkbox" value="tieuhoa" class="supplement"> Tiêu hóa TS (15ml/10kg cám/mỗi lần)</label>
     <label><input type="checkbox" value="bogan" class="supplement"> Bổ gan (8ml/1kg cám/buổi sáng)</label>
     <label><input type="checkbox" value="visinhnuoc" class="supplement"> Vi sinh đánh nước (1g/1000L, 3 ngày 1 lần)</label>
   </div>
@@ -208,7 +208,7 @@
           totalSummary.visinhWater += 30 * camKg * 1000 * 2;
         }
         if (selected.includes("tieuhoa")) {
-          const value = 15 * camKg * 1000 / 10 * 10;
+          const value = 15 * camKg * 1000 / 10;
           rows.push(["Tiêu hóa TS", formatUl(value)]);
           totalSummary.tieuhoa += value;
           totalSummary.tieuhoaWater += value * (9/10);
