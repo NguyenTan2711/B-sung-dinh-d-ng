@@ -60,45 +60,29 @@
     th {
       background-color: #ecf0f1;
     }
-    .error {
-      color: red;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    .tank-group {
-      border: 1px dashed #ccc;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      background-color: #fff;
-    }
     .note {
       margin-top: 20px;
       font-style: italic;
       color: #7f8c8d;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <h1>Tính Toán Bổ Sung Dinh Dưỡng Vào Cám</h1>
 
-  <div id="tanks-container">
-    <div class="tank-group">
-      <label>Khối lượng cám cho bể 1 (g):</label>
-      <input type="number" class="cam" required>
-      <label>Thể tích bể 1 (lít):</label>
-      <input type="number" class="tank" required>
-    </div>
-    <div class="tank-group">
-      <label>Khối lượng cám cho bể 2 (g):</label>
-      <input type="number" class="cam" required>
-      <label>Thể tích bể 2 (lít):</label>
-      <input type="number" class="tank" required>
-    </div>
-  </div>
+  <label>Số lượng tôm:</label>
+  <input type="number" id="soLuongTom" required>
 
-  <button onclick="addTank()">➕ Thêm bể</button>
-  <button onclick="removeTank()">➖ Xóa bể</button>
+  <label>Khối lượng 1 con tôm (g):</label>
+  <input type="number" id="khoiLuongMotCon" required>
+
+  <label>Thể tích bể (lít):</label>
+  <input type="number" id="theTichBe" required>
 
   <label>Chọn thành phần bổ sung:</label>
   <div class="checkbox-group">
@@ -111,37 +95,12 @@
   </div>
 
   <button onclick="calculate()">Tính toán</button>
-  <button onclick="downloadResult()">📥 Tải kết quả</button>
 
   <div id="error" class="error"></div>
   <div id="result"></div>
   <div class="note">* Đơn vị: mg = milligram, µL = microlit</div>
 
   <script>
-    let tankCount = 2;
-
-    function addTank() {
-      tankCount++;
-      const container = document.getElementById('tanks-container');
-      const div = document.createElement('div');
-      div.className = 'tank-group';
-      div.innerHTML = `
-        <label>Khối lượng cám cho bể ${tankCount} (g):</label>
-        <input type="number" class="cam" required>
-        <label>Thể tích bể ${tankCount} (lít):</label>
-        <input type="number" class="tank" required>
-      `;
-      container.appendChild(div);
-    }
-
-    function removeTank() {
-      const container = document.getElementById('tanks-container');
-      if (container.children.length > 2) {
-        container.removeChild(container.lastElementChild);
-        tankCount--;
-      }
-    }
-
     function formatMg(value) {
       return `${value.toFixed(2)} mg`;
     }
@@ -155,124 +114,50 @@
     }
 
     function calculate() {
-      const camInputs = document.querySelectorAll('.cam');
-      const tankInputs = document.querySelectorAll('.tank');
+      const soLuongTom = parseFloat(document.getElementById('soLuongTom').value);
+      const khoiLuongMotCon = parseFloat(document.getElementById('khoiLuongMotCon').value);
+      const theTichBeStr = document.getElementById('theTichBe').value;
+      const theTichBe = parseFloat(theTichBeStr);
       const selected = Array.from(document.querySelectorAll('.supplement:checked')).map(cb => cb.value);
       const resultDiv = document.getElementById('result');
       const errorDiv = document.getElementById('error');
 
-      errorDiv.textContent = "";
       resultDiv.innerHTML = "";
-      let outputText = "";
+      errorDiv.textContent = "";
 
-      let totalSummary = {
-        cam: 0,
-        tank: 0,
-        tangluc: 0,
-        phongduongruot: 0,
-        visinh: 0,
-        visinhWater: 0,
-        tieuhoa: 0,
-        tieuhoaWater: 0,
-        bogan: 0,
-        boganWater: 0,
-        visinhnuoc: 0,
-        nuoc: 0
-      };
-
-      camInputs.forEach((camInput, i) => {
-        const camValue = parseFloat(camInput.value) || 0;
-        const tankValue = parseFloat(tankInputs[i].value) || 0;
-        const camKg = camValue / 1000;
-        let waterDeduct = 0;
-
-        const rows = [];
-        rows.push(["Khối lượng cám", `${camValue.toFixed(2)} g`]);
-        totalSummary.cam += camValue;
-        totalSummary.tank += tankValue;
-
-        if (selected.includes("tangluc")) {
-          const value = 10 * camKg * 1000;
-          rows.push(["Tăng lực", formatMg(value)]);
-          totalSummary.tangluc += value;
-        }
-        if (selected.includes("phongduongruot")) {
-          const value = 5 * camKg * 1000;
-          rows.push(["Phòng đường ruột", formatMg(value)]);
-          totalSummary.phongduongruot += value;
-        }
-        if (selected.includes("visinh")) {
-          const value = 30 * camKg * 1000;
-          rows.push(["Vi sinh đường ruột", formatUl(value)]);
-          totalSummary.visinh += value;
-          totalSummary.visinhWater += 30 * camKg * 1000 * 2;
-        }
-        if (selected.includes("tieuhoa")) {
-          const value = 15 * camKg * 1000 / 10;
-          rows.push(["Tiêu hóa TS", formatUl(value)]);
-          totalSummary.tieuhoa += value;
-          totalSummary.tieuhoaWater += value * (9/10);
-        }
-        if (selected.includes("bogan")) {
-          const value = 8 * camKg * 1000;
-          rows.push(["Bổ gan", formatUl(value)]);
-          totalSummary.bogan += value;
-          totalSummary.boganWater += 8 * camKg * 1000 * 2;
-        }
-        if (selected.includes("visinhnuoc")) {
-          const value = tankValue;
-          rows.push(["Vi sinh đánh nước", formatMg(value)]);
-          totalSummary.visinhnuoc += value;
-        }
-
-   
-
-        let html = `<h3>Kết quả cho bể ${i + 1}</h3><table><tr><th>Thành phần</th><th>Lượng</th></tr>`;
-        rows.forEach(row => {
-          html += `<tr><td>${cleanLabel(row[0])}</td><td>${row[1]}</td></tr>`;
-          outputText += `Bể ${i + 1} - ${cleanLabel(row[0])}: ${row[1]}\n`;
-        });
-        html += `</table>`;
-        resultDiv.innerHTML += html;
-        outputText += `\n`;
-      });
-
-      if (tankCount > 1) {
-        let html = `<h2>Tổng cộng tất cả bể</h2><table><tr><th>Thành phần</th><th>Tổng</th></tr>`;
-        if (selected.includes("tangluc")) html += `<tr><td>Tăng lực</td><td>${formatMg(totalSummary.tangluc)}</td></tr>`;
-        if (selected.includes("phongduongruot")) html += `<tr><td>Phòng đường ruột</td><td>${formatMg(totalSummary.phongduongruot)}</td></tr>`;
-        if (selected.includes("visinh")) html += `<tr><td>Vi sinh đường ruột</td><td>${formatUl(totalSummary.visinh)}</td></tr>`;
-        if (selected.includes("tieuhoa")) html += `<tr><td>Tiêu hóa TS</td><td>${formatUl(totalSummary.tieuhoa)}</td></tr>`;
-        if (selected.includes("bogan")) html += `<tr><td>Bổ gan</td><td>${formatUl(totalSummary.bogan)}</td></tr>`;
-        if (selected.includes("visinhnuoc")) html += `<tr><td>Vi sinh đánh nước</td><td>${formatMg(totalSummary.visinhnuoc)}</td></tr>`;
-        if (totalSummary.nuoc > 0) html += `<tr><td>Bổ sung nước đã trừ phần pha loãng</td><td>${formatUl(totalSummary.nuoc)}</td></tr>`;
-        html += `</table>`;
-        resultDiv.innerHTML += html;
-
-        outputText += `Tổng cộng:\n`;
-        outputText += `Tổng khối lượng cám: ${totalSummary.cam.toFixed(2)} g\n`;
-        if (selected.includes("tangluc")) outputText += `Tăng lực: ${formatMg(totalSummary.tangluc)}\n`;
-        if (selected.includes("phongduongruot")) outputText += `Phòng đường ruột: ${formatMg(totalSummary.phongduongruot)}\n`;
-        if (selected.includes("visinh")) outputText += `Vi sinh đường ruột: ${formatUl(totalSummary.visinh)}\n`;
-        if (selected.includes("tieuhoa")) outputText += `Tiêu hóa TS: ${formatUl(totalSummary.tieuhoa)}\n`;
-        if (selected.includes("bogan")) outputText += `Bổ gan: ${formatUl(totalSummary.bogan)}\n`;
-        if (selected.includes("visinhnuoc")) outputText += `Vi sinh đánh nước: ${formatMg(totalSummary.visinhnuoc)}\n`;
-        if (totalSummary.nuoc > 0) outputText += `Bổ sung nước đã trừ phần pha loãng: ${formatUl(totalSummary.nuoc)}\n`;
-      }
-
-      window.generatedResultText = outputText;
-    }
-
-    function downloadResult() {
-      if (!window.generatedResultText) {
-        alert("Vui lòng tính toán trước khi tải kết quả.");
+      // Kiểm tra bắt buộc: số lượng tôm và khối lượng mỗi con
+      if (isNaN(soLuongTom) || isNaN(khoiLuongMotCon)) {
+        errorDiv.textContent = "Vui lòng nhập số lượng tôm và khối lượng mỗi con!";
         return;
       }
-      const blob = new Blob([window.generatedResultText], { type: "text/plain;charset=utf-8" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "ket_qua_bo_sung_dinh_duong.txt";
-      link.click();
+
+      // Nếu chọn "vi sinh đánh nước" mà chưa nhập thể tích
+      if (selected.includes("visinhnuoc") && (theTichBeStr === "" || isNaN(theTichBe))) {
+        errorDiv.textContent = "Vui lòng nhập thể tích bể để tính vi sinh đánh nước!";
+        return;
+      }
+
+      const tongKhoiLuongTom = soLuongTom * khoiLuongMotCon;
+      const khoiLuongCam = tongKhoiLuongTom * 0.05; // 5%
+      const camKg = khoiLuongCam / 1000;
+
+      const rows = [
+        ["Khối lượng cám (5%)", `${khoiLuongCam.toFixed(2)} g`]
+      ];
+
+      if (selected.includes("tangluc")) rows.push(["Tăng lực", formatMg(10 * camKg * 1000)]);
+      if (selected.includes("phongduongruot")) rows.push(["Phòng đường ruột", formatMg(5 * camKg * 1000)]);
+      if (selected.includes("visinh")) rows.push(["Vi sinh đường ruột", formatUl(30 * camKg * 1000)]);
+      if (selected.includes("tieuhoa")) rows.push(["Tiêu hóa TS", formatUl(15 * camKg * 1000 / 10)]);
+      if (selected.includes("bogan")) rows.push(["Bổ gan", formatUl(8 * camKg * 1000)]);
+      if (selected.includes("visinhnuoc")) rows.push(["Vi sinh đánh nước", formatMg(theTichBe)]);
+
+      let html = `<table><tr><th>Thành phần</th><th>Giá trị</th></tr>`;
+      rows.forEach(row => {
+        html += `<tr><td>${cleanLabel(row[0])}</td><td>${row[1]}</td></tr>`;
+      });
+      html += `</table>`;
+      resultDiv.innerHTML = html;
     }
   </script>
 </body>
